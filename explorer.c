@@ -55,13 +55,11 @@ struct protection
 };
 
 //global variables
-struct room map[10];
-bool doorways[10][10];
-struct player plr;
-char command[10];
-bool quitFlag = false;
-struct weapon sword;
-struct protection shield;
+struct room gMap[10];
+bool gDoorways[10][10];
+struct player gPlayer;
+char gCommand[10];
+bool gQuitFlag = false;
 struct item items[1];
 
 int main(void)
@@ -72,7 +70,7 @@ int main(void)
 
 	init();
 
-	while(!quitFlag)
+	while(!gQuitFlag)
 	{
 		handleCommand();
 	}
@@ -121,8 +119,8 @@ void generateMap(void)
 			{
 				randomID = rand()%10;
 			}
-			doorways[i][randomID] = true;
-			doorways[randomID][i] = true;
+			gDoorways[i][randomID] = true;
+			gDoorways[randomID][i] = true;
 		}
 	}
 
@@ -135,7 +133,7 @@ void generateMap(void)
 			printf("%d ", this);
 			for(other = 0; other < 10; other++)
 			{
-				if(doorways[this][other])
+				if(gDoorways[this][other])
 				{
 					printf(" x ");
 				}
@@ -161,7 +159,7 @@ void initRooms(void)
 	int this;
 	for(this = 0; this < 10; this++)
 	{
-		map[this].id = this;
+		gMap[this].id = this;
 	}
 }
 
@@ -174,7 +172,7 @@ void initDoorways(void)
 	{
 		for(other = 0; other < 10; other++)
 		{
-			doorways[this][other] = false;
+			gDoorways[this][other] = false;
 		}
 	}
 }
@@ -207,11 +205,11 @@ void initEnemies(void)
 //initialize the player
 void initPlayer(void)
 {
-	plr.weapon = 1.0f;
-	plr.protection = 0.1f;
-	plr.maxHealth = 3.0f;
-	plr.health = 3.0f;
-	plr.currentRoom = 0;
+	gPlayer.weapon = 1.0f;
+	gPlayer.protection = 0.1f;
+	gPlayer.maxHealth = 3.0f;
+	gPlayer.health = 3.0f;
+	gPlayer.currentRoom = 0;
 }
 
 //handle command processing
@@ -228,14 +226,14 @@ void handleCommand(void)
 	processCommand();
 }
 
-//read command
+//read a command
 void readCommand(void)
 {
 	printf("\n-> ");
-	scanf("%s", command);
+	scanf("%s", gCommand);
 }
 
-//verify command is valid
+//verify that the command is valid
 bool verifyCommand(void)
 {
 	//local variales
@@ -243,16 +241,16 @@ bool verifyCommand(void)
 
 	for(i = 0; i < NUM_CMDS; i++)
 	{
-		if(strcmp(command, CMDS[i]) == 0) return true;
+		if(strcmp(gCommand, CMDS[i]) == 0) return true;
 	}
-	if(DEBUG) printf("\"%s\" is not a recognized command!\n", command);
+	if(DEBUG) printf("\"%s\" is not a recognized gCommand!\n", gCommand);
 	return false;
 }
 
 //process the command
 void processCommand(void)
 {
-	//pre-condition: command is valid
+	//pre-condition: gCommand is valid
 	
 	//functions used
 	void cmd_quit(void);
@@ -262,31 +260,31 @@ void processCommand(void)
 	void cmd_move(void);
 	void cmd_attack(void);
 
-	if(DEBUG) printf("%s\n", command);
+	if(DEBUG) printf("%s\n", gCommand);
 	
-	//quit command
-	if(strcmp(command, CMDS[QUIT]) == 0) cmd_quit();
+	//quit gCommand
+	if(strcmp(gCommand, CMDS[QUIT]) == 0) cmd_quit();
 
-	//help command
-	else if(strcmp(command, CMDS[HELP]) == 0) cmd_help();
+	//help gCommand
+	else if(strcmp(gCommand, CMDS[HELP]) == 0) cmd_help();
 
-	//look command
-	else if(strcmp(command, CMDS[LOOK]) == 0) cmd_look();
+	//look gCommand
+	else if(strcmp(gCommand, CMDS[LOOK]) == 0) cmd_look();
 
-	//check command
-	else if(strcmp(command, CMDS[CHECK]) == 0) cmd_check();
+	//check gCommand
+	else if(strcmp(gCommand, CMDS[CHECK]) == 0) cmd_check();
 
-	//move command
-	else if(strcmp(command, CMDS[MOVE]) == 0) cmd_move();
+	//move gCommand
+	else if(strcmp(gCommand, CMDS[MOVE]) == 0) cmd_move();
 
-	//attack command
-	else if(strcmp(command, CMDS[ATTACK]) == 0) cmd_attack();
+	//attack gCommand
+	else if(strcmp(gCommand, CMDS[ATTACK]) == 0) cmd_attack();
 }
 
 void cmd_quit(void)
 {
 	if(DEBUG) printf("cmd_quit()\n");
-	quitFlag = true;
+	gQuitFlag = true;
 }
 
 void cmd_help(void)
@@ -302,7 +300,7 @@ void cmd_help(void)
 	}
 }
 
-//display contents of room and available doorways
+//display contents of room and available gDoorways
 void cmd_look(void)
 {
 	if(DEBUG) printf("cmd_look()\n");
@@ -329,9 +327,9 @@ void checkPlayer(void)
 	
 	printf("--PLAYER--\n");
 	showHealthBar();
-	printf("Location: Room %d\n", plr.currentRoom);
-	printf("Sword strength: %.2f\n", plr.weapon);
-	printf("Shield strength: %.2f\n", plr.protection);
+	printf("Location: Room %d\n", gPlayer.currentRoom);
+	printf("Sword strength: %.2f\n", gPlayer.weapon);
+	printf("Shield strength: %.2f\n", gPlayer.protection);
 }
 
 void showHealthBar(void)
@@ -343,15 +341,15 @@ void showHealthBar(void)
 	float h;
 
 	printf("[");
-	for(h = 0.0f; h < plr.maxHealth; h += 0.25f)
+	for(h = 0.0f; h < gPlayer.maxHealth; h += 0.25f)
 	{
-		if(h <= plr.health) printf("=");
+		if(h <= gPlayer.health) printf("=");
 		else printf("-");
 	}
 	printf("]\t");
-	printf("%.2f/%.2f\n", plr.health, plr.maxHealth);
+	printf("%.2f/%.2f\n", gPlayer.health, gPlayer.maxHealth);
 	
-	hearts(plr.health);
+	hearts(gPlayer.health);
 }
 
 void hearts(float health)
@@ -406,22 +404,22 @@ void cmd_move(void)
 	sscanf(input, "%d", &moveTo);
 	if(DEBUG) printf("%d\n", moveTo);
 
-	if(moveTo == plr.currentRoom)
+	if(moveTo == gPlayer.currentRoom)
 	{
-		printf("You are already in room %d.\n", plr.currentRoom);
+		printf("You are already in room %d.\n", gPlayer.currentRoom);
 	}
 	else if(moveTo > 9 || moveTo < 0)
 	{
 		printf("\"%d\" is not a valid room number!\n", moveTo);
 	}
-	else if(doorways[plr.currentRoom][moveTo] == false)
+	else if(gDoorways[gPlayer.currentRoom][moveTo] == false)
 	{
-		printf("You cannot get to room %d from here! (You're in room %d)\n", moveTo, plr.currentRoom);
+		printf("You cannot get to room %d from here! (You're in room %d)\n", moveTo, gPlayer.currentRoom);
 	}
 	else
 	{
-		plr.currentRoom = moveTo;
-		printf("You are now in room %d.\n", plr.currentRoom);
+		gPlayer.currentRoom = moveTo;
+		printf("You are now in room %d.\n", gPlayer.currentRoom);
 	}
 }
 
