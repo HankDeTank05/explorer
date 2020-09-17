@@ -7,7 +7,7 @@
 #include <string.h>
 
 //constants
-const bool DEBUG = true;
+const bool DEBUG = false;
 
 const int CMD_SIZE = 10;
 const int NUM_CMDS = 7;
@@ -395,6 +395,7 @@ void checkPlayer(void)
 	printf("Location: Room %d\n", gPlayer.currentRoom);
 	printf("Sword strength: %.2f\n", gPlayer.weapon);
 	printf("Shield strength: %.2f\n", gPlayer.protection);
+	printf("\n");
 }
 
 void showHealthBar(void)
