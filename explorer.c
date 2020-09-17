@@ -10,14 +10,22 @@
 const bool DEBUG = true;
 
 const int CMD_SIZE = 10;
-const int NUM_CMDS = 6;
-const char CMDS[6][10] = {"help", "quit", "look", "check", "move", "attack"};
+const int NUM_CMDS = 7;
+const char CMDS[7][10] = {"help", "quit", "look", "check", "move", "attack", "take"};
 const int HELP = 0;
 const int QUIT = 1;
 const int LOOK = 2;
 const int CHECK = 3;
 const int MOVE = 4;
 const int ATTACK = 5;
+const int TAKE = 6;
+
+const int NUM_ENEMY_NAMES = 3;
+const char ENEMY_NAMES[3][10] = {"bat", "monster", "skeleton"};
+const float ENEMY_HEALTH[3] = {1.0f, 4.0f, 2.0f};
+const int BAT = 0;
+const int MONSTER = 1;
+const int SKELETON = 2;
 
 //structs
 struct room
@@ -54,13 +62,31 @@ struct protection
 	float protection; //the PERCENT damage it blocks
 };
 
+struct enemy
+{
+	const char name[20];
+	int location; //NOTE: -1 means it's in the player's inventory, [0-9] means it's in a room
+	float health;
+};
+
 //global variables
+int numRooms = 10;
 struct room gMap[10];
+
+int lenDoorways = 10;
 bool gDoorways[10][10];
+
 struct player gPlayer;
+
 char gCommand[10];
+
 bool gQuitFlag = false;
-struct item items[1];
+
+int numItems = 1;
+struct item gItems[1];
+
+int numEnemies = 5;
+struct enemy gEnemies[5];
 
 int main(void)
 {
@@ -184,7 +210,7 @@ void initItems(void)
 	time_t t;
 
 	//assign names to the items
-	items[0] = (struct item){"crystal", 0};
+	gItems[0] = (struct item){"crystal", 0};
 
 	//seed the random number generator
 	srand((unsigned) time(&t));
@@ -194,7 +220,7 @@ void initItems(void)
 		location = rand() % 10;
 	} while(location == 0);
 
-	items[0].location = location;
+	gItems[0].location = location;
 }
 
 void initEnemies(void)
@@ -243,7 +269,7 @@ bool verifyCommand(void)
 	{
 		if(strcmp(gCommand, CMDS[i]) == 0) return true;
 	}
-	if(DEBUG) printf("\"%s\" is not a recognized gCommand!\n", gCommand);
+	if(DEBUG) printf("\"%s\" is not a recognized command!\n", gCommand);
 	return false;
 }
 
@@ -259,26 +285,30 @@ void processCommand(void)
 	void cmd_check(void);
 	void cmd_move(void);
 	void cmd_attack(void);
+	void cmd_take(void);
 
 	if(DEBUG) printf("%s\n", gCommand);
-	
-	//quit gCommand
+
+	//quit command
 	if(strcmp(gCommand, CMDS[QUIT]) == 0) cmd_quit();
 
-	//help gCommand
+	//help command
 	else if(strcmp(gCommand, CMDS[HELP]) == 0) cmd_help();
 
-	//look gCommand
+	//look command
 	else if(strcmp(gCommand, CMDS[LOOK]) == 0) cmd_look();
 
-	//check gCommand
+	//check command
 	else if(strcmp(gCommand, CMDS[CHECK]) == 0) cmd_check();
 
-	//move gCommand
+	//move command
 	else if(strcmp(gCommand, CMDS[MOVE]) == 0) cmd_move();
 
-	//attack gCommand
+	//attack command
 	else if(strcmp(gCommand, CMDS[ATTACK]) == 0) cmd_attack();
+
+	//take command
+	else if(strcmp(gCommand, CMDS[TAKE]) == 0) cmd_take();
 }
 
 void cmd_quit(void)
@@ -305,6 +335,41 @@ void cmd_look(void)
 {
 	if(DEBUG) printf("cmd_look()\n");
 	//TODO: implement cmd_look() method
+	
+	//local variables
+	int i;
+
+	//check the items array to see what's in the current room
+	printf("--ITEMS--\n");
+	for(i = 0; i < numItems; i++)
+	{
+		if(gItems[i].location == gPlayer.currentRoom)
+		{
+			printf("\t%s\n", gItems[i].name);
+		}
+	}
+	printf("\n");
+
+	//check the enemies array to see what's in the current room
+	printf("--ENEMIES--\n");
+	for(i = 0; i < numEnemies; i++)
+	{
+		if(gEnemies[i].location == gPlayer.currentRoom)
+		{
+			//printf("\t%s\t%f HP\n", gEnemies[i].name, gEnemies[i].health);
+		}
+	}
+	printf("\n");
+
+	//check the doorways lookup table to see what doorways are here
+	printf("--DOORWAYS--\n");
+	for(i = 0; i < lenDoorways; i++)
+	{
+		if(gDoorways[gPlayer.currentRoom][i])
+		{
+			printf("\tRoom %d\n", i);
+		}
+	}
 }
 
 //display the player's inventory
@@ -384,8 +449,17 @@ void hearts(float health)
 void checkInventory(void)
 {
 	//TODO: implement checkInventory() method
+	//local variables
+	int i;
+
 	printf("--INVENTORY--\n");
-	printf("EMPTY");
+	for(i = 0; i < numItems; i++)
+	{
+		if(gItems[i].location == -1)
+		{
+			printf("\t%s\n", gItems[i].name);
+		}
+	}
 	printf("\n");
 }
 
@@ -427,4 +501,31 @@ void cmd_attack(void)
 {
 	if(DEBUG) printf("cmd_attack()\n");
 	//TODO: implement cmd_attack() method
+}
+
+void cmd_take(void)
+{
+	if(DEBUG) printf("cmd_take()\n");
+	//TODO: implement cmd_take() method
+	//local variables
+	int i;
+	const int SIZE = 100;
+	char takeItem[SIZE];
+
+	//read the argument of the take command
+	fgets(takeItem, SIZE, stdin);
+	sscanf(takeItem, "%s", takeItem);
+
+	if(DEBUG) printf("takeItem = %s\n", takeItem);
+	
+	//loop over the items list to see if the specified item exists in this room
+	for(i = 0; i < numItems; i++)
+	{
+		if(strcmp(gItems[i].name, takeItem) == 0 && gItems[i].location == gPlayer.currentRoom)
+		{
+			gItems[i].location = -1;
+			printf("%s is now in your inventory!\n", gItems[i].name);
+			break;
+		}
+	}
 }
